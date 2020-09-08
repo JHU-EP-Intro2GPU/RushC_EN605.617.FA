@@ -1,1 +1,1 @@
-nvcc hello-world.cu -o helloworld
+gcc hello_world_cl.c -o helloworld -lOpenCL
