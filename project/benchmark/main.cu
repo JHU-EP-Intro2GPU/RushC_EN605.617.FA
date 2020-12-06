@@ -206,15 +206,9 @@ int main()
 {
     try
     {
-        // Note: Much like the first pancake in a batch, the first CUDA kernel
-        //       is never quite right; it always takes a little bit longer. So
-        //       let's quickly perform a kernel call before we start collecting
-        //       timings so we don't end up with any weird results.
-        TestCase test_case;
-        test_case.key = random_bytes(KEY_SIZE);
-        test_case.nonce = random_bytes(NONCE_SIZE);
-        test_case.plaintext = random_bytes(16);
-        time_cuaes(test_case);
+        // Force the CUDA runtime to load now so that the load time doesn't 
+        // impact any of the timings.
+        cudaFree(nullptr);
 
         std::vector<Timing> cpu_timings = {};
         std::vector<Timing> gpu_timings = {};
