@@ -165,7 +165,7 @@ namespace utils
          */
         explicit CudaBuffer(size_t num_elements) :
             num_elements(num_elements),
-            pointer(malloc(size()), FREE)
+            pointer(allocate(size()), FREE)
         {
             // Empty
         }
@@ -210,7 +210,7 @@ namespace utils
          *
          * @throw utils::CudaException If the memory allocation fails.
          */
-        static T* malloc(size_t num_elements)
+        static T* allocate(size_t num_elements)
         {
             T* ptr;
             CUDA_CALL(MALLOC((void**)&ptr, num_elements * sizeof(T)));
