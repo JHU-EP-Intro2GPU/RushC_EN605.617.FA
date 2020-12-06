@@ -37,13 +37,24 @@ static uint32_t host_to_network(uint32_t value)
     return *reinterpret_cast<uint32_t*>(bytes);
 }
 
+/**
+ * Encrypt 
+ * 
+ * @param type 
+ * @param key 
+ * @param nonce 
+ * @param plaintext 
+ * @param plaintext_size 
+ * @param ciphertext 
+ * @return __global__ 
+ */
 __global__
 static void encrypt_block(cuaes::Type type,
-                   const uint8_t key[], 
-                   const uint8_t nonce[], 
-                   const uint8_t plaintext[], 
-                   size_t plaintext_size, 
-                   uint8_t ciphertext[])
+                          const uint8_t key[], 
+                          const uint8_t nonce[], 
+                          const uint8_t plaintext[], 
+                          size_t plaintext_size, 
+                          uint8_t ciphertext[])
 {
     size_t block_index = utils::thread_id();
 
@@ -83,20 +94,14 @@ namespace cuaes
         if (ciphertext == nullptr) throw std::invalid_argument("ciphertext is null");
 
         size_t num_blocks = (plaintext_size + BLOCK_SIZE - 1) / BLOCK_SIZE;
-
-        utils::launch_kernel(encrypt_block, num_blocks, 
-        [&](size_t start, unsigned grid_size, unsigned block_size)
-        {
-            size_t data_start = start * BLOCK_SIZE;
-            size_t data_size = plaintext_size - data_start;
-
-            encrypt_block<<<grid_size, block_size>>>(type,
-                                                    key,
-                                                    nonce,
-                                                    &plaintext[data_start],
-                                                    data_size,
-                                                    &ciphertext[data_start]);
-        });
+        utils::launch_kernel(encrypt_block,
+                             num_blocks,
+                             type,
+                             key,
+                             nonce,
+                             plaintext,
+                             plaintext_size,
+                             ciphertext);
         
         CUDA_CALL(cudaDeviceSynchronize());
         CUDA_CALL(cudaGetLastError());

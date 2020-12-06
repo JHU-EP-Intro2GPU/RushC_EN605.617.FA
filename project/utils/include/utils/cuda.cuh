@@ -96,39 +96,28 @@ namespace utils
     //--------------------------------------------------------------------------
 
     /**
-     * Describes a function that launches a kernel on a range of data.
-     * 
-     * @param[in] offset      The offset into the data that should be passed to kernel.
-     * @param[in] grid_size   The grid size to use in the kernel call.
-     * @param[in] block_size  The block size to use in the kernel call.
-     */
-    using KernelLaunchFunction = std::function<void(size_t offset, 
-                                                    unsigned grid_size, 
-                                                    unsigned block_size)>;
-
-    /**
      * Launch a kernel using the most efficient grid sizes and block sizes as
      * reported by the hardware.
      * 
      * @tparam KernelFunction The type of the kernel function.
+     * @tparam Args           The types of the arguments to pass to the kernel.
      * 
      * @param[in] kernel         The kernel to be launched.
      * @param[in] threads_needed The number of threads that need to be launched.
-     * @param[in] launch_kernel  A function to launch the kernel.
+     * @param[in] args           The arguments to pass to the kernel.
      * 
      * @c threads_needed does not need to be rounded; it can just be the size of
      * the data. This function will perform any appropriate rounding/padding.
-     * However, note that either @c launch_kernel or @c kernel will need to
-     * perform checks to make sure that @c kernel does not perform an 
-     * out-of-bounds memory access in case more threads are launched than are
-     * needed.
+     * However, note that @c kernel will need to perform checks to make sure 
+     * that it does not perform an out-of-bounds memory access in case more 
+     * threads are launched than are needed.
      * 
      * @throws CudaException if a CUDA error occurs.
      */
-    template<typename KernelFunction>
+    template<typename KernelFunction, typename... Args>
     void launch_kernel(KernelFunction kernel, 
                        size_t threads_needed, 
-                       const KernelLaunchFunction& launch_kernel)
+                       Args&&... args)
     {
         // Determine the ideal grid and block size.
         int min_grid_size;
@@ -143,9 +132,7 @@ namespace utils
         auto grid_size = (threads_needed + block_size - 1) / block_size;
 
         // Call the kernel.
-        launch_kernel(0, 
-                      static_cast<unsigned>(grid_size), 
-                      static_cast<unsigned>(block_size));
+        kernel<<<grid_size, block_size>>>(args...);
     }
 
     //--------------------------------------------------------------------------
